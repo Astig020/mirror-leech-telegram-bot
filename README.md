@@ -2,9 +2,9 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 
 # Features:
 
-## By [Anas](https://github.com/anasty17)
+## By [anasty17](https://github.com/anasty17)
 - qBittorrent.
-- Select files from Torrent before downloading using qbittorrent.
+- Select files from Torrent before downloading using qbittorrent and aria2c.
 - Leech (splitting, thumbnail for each user, setting as document or as media for each user).
 - Stop duplicates for all tasks except yt-dlp tasks.
 - Zip/Unzip G-Drive links.
@@ -22,7 +22,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Mirror/Leech/Watch/Clone/Count/Del by reply.
 - YT-DLP quality buttons.
 - Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
-- Docker image support for linux `amd64, arm64, arm/v7, arm/v6, arm64/v8` (**Note**: Use `anasty17/mltb:arm64` for `arm64/v8` or oracle).
+- Docker image support for linux `amd64, arm64/v8, arm/v7, s390x`.
 - Update bot at startup and with restart command using `UPSTREAM_REPO`.
 - Qbittorrent seed until reaching specific ratio or time.
 - Rss feed and filter. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan).
@@ -31,6 +31,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Extensions Filter for the files to be uploaded/cloned.
 - Incomplete task notifier to get incomplete task messages after restart, works with database.
 - Almost all repository functions have been improved.
+- Custom Name for all links except torrents. For files you should add extension except yt-dlp links.
 - Many bugs have been fixed.
 
 ## From Other Repositories
@@ -47,17 +48,20 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Multiple Trackers support
 - Shell and Executor
 - Add sudo users
-- Custom Filename* (Only for direct links, Telegram files and yt-dlp. Not for Mega links, Gdrive links or Torrents)
 - Extract password protected files
 - Extract these filetypes and uploads to Google Drive
   > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ
 
 - Direct links Supported:
-  >letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
+  >mediafire, letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
 
 # How to deploy?
 
 ## Prerequisites
+
+- Tutorial Video from A to Z:
+  - Thanks to [Wiszky](https://github.com/vishnoe115)
+ <p><a href="https://youtu.be/IUmq1paCiHI"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
 ### 1. Installing requirements
 
@@ -126,10 +130,11 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `UPSTREAM_BRANCH`: Upstream branch for update. Default is `master`. `Str`
 
 ### Leech
-- `TG_SPLIT_SIZE`: Size of split in bytes. Default is `2GB`. `Str`
+- `LEECH_SPLIT_SIZE`: Size of split in bytes. Default is `2GB`. Default is `4GB` if your account is premium. `Str`
 - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
-- `EQUAL_SPLITS`: Split files larger than **TG_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
+- `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
 - `CUSTOM_FILENAME`: Add custom word to leeched file name. `Str`
+- `USER_SESSION_STRING`: To download/upload from your telegram account. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: You can't use bot with private message. Use it with supergroup or channel.
 
 ### qBittorrent
 - `BASE_URL_OF_BOT`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so write it in this format `http://myip:port` (`http` and not `https`). This Var is optional on VPS and required for Heroku specially to avoid app sleeping/idling. For Heroku fill `https://yourappname.herokuapp.com`. Still got idling? You can use http://cron-job.org to ping your Heroku app. `Str`
@@ -142,8 +147,8 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `900` second at least. Default is `900` in sec. `Str`
 - `RSS_COMMAND`: Choose command for the desired action. `Str`
 - `RSS_CHAT_ID`: Chat ID where rss links will be sent. If using channel then add channel id. `Str`
-- `USER_SESSION_STRING`: To send rss links from your telegram account. Instead of adding bot to channel then linking the channel to group to get rss link since bot will not read command from itself or other bot. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`
-  - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` is required, otherwise all rss commands will not work. You must use bot in group. You can add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `USER_STRING_SESSION`.
+- `RSS_USER_SESSION_STRING`: To send rss links from your telegram account. Instead of adding bot to channel then linking the channel to group to get rss link since bot will not read command from itself or other bot. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: Don't use same session string as `USER_SESSION_STRING`.
+  - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` is required, otherwise all rss commands will not work. You must use bot in group. You can add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `RSS_USER_STRING_SESSION`.
 
 ### Private Files
 - `ACCOUNTS_ZIP_URL`: Only if you want to load your Service Account externally from an Index Link or by any direct download link NOT webpage link. Archive the accounts folder to ZIP file. Fill this with the direct download link of zip file. `Str`. If index need authentication so add direct download as shown below:
@@ -207,8 +212,7 @@ sudo docker container prune
 sudo docker image prune -a
 ```
 4. Check the number of processing units of your machine with `nproc` cmd and times it by 4, then edit `AsyncIOThreadsCount` in qBittorrent.conf.
-5. Use `anasty17/mltb:arm64` for oracle or arm64/v8.
-6. You can add `CONFIG_FILE_URL` variable using docker and docker-compose, google it.
+5. You can add `CONFIG_FILE_URL` variable using docker and docker-compose, google it.
 
 ------
 
@@ -295,6 +299,7 @@ leechzipwatch - Leech yt-dlp support link as zip
 leechset - Leech settings
 setthumb - Set thumbnail
 status - Get Mirror Status message
+btsel - select files from torrent
 rsslist - List all subscribed rss feed info
 rssget - Get specific No. of links from specific rss feed
 rsssub - Subscribe new rss feed
