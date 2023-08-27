@@ -69,14 +69,15 @@ class TgUploader:
             self.__user_leech = True
         self.__upload_dest = self.__listener.upDest or self.__listener.user_dict.get(
             'leech_dest') or config_dict['LEECH_DUMP_CHAT']
-        if self.__upload_dest.startswith('b:'):
-            self.__upload_dest = self.__upload_dest.lstrip('b:')
-            self.__user_leech = False
-        elif self.__upload_dest.startswith('u:'):
-            self.__upload_dest = self.__upload_dest.lstrip('u:')
-            self.__user_leech = IS_PREMIUM_USER
-        if self.__upload_dest.isdigit() or self.__upload_dest.startswith('-'):
-            self.__upload_dest = int(self.__upload_dest)
+        if not isinstance(self.__upload_dest, int):
+            if self.__upload_dest.startswith('b:'):
+                self.__upload_dest = self.__upload_dest.lstrip('b:')
+                self.__user_leech = False
+            elif self.__upload_dest.startswith('u:'):
+                self.__upload_dest = self.__upload_dest.lstrip('u:')
+                self.__user_leech = IS_PREMIUM_USER
+            if self.__upload_dest.isdigit() or self.__upload_dest.startswith('-'):
+                self.__upload_dest = int(self.__upload_dest)
 
     async def __msg_to_reply(self):
         if self.__upload_dest:
@@ -189,7 +190,8 @@ class TgUploader:
             for file_ in natsorted(files):
                 self.__up_path = ospath.join(dirpath, file_)
                 if file_.lower().endswith(tuple(extension_filter)):
-                    await aioremove(self.__up_path)
+                    if not self.__listener.seed or self.__listener.newDir:
+                        await aioremove(self.__up_path)
                     continue
                 try:
                     f_size = await aiopath.getsize(self.__up_path)
@@ -224,8 +226,9 @@ class TgUploader:
                     if isinstance(err, RetryError):
                         LOGGER.info(
                             f"Total Attempts: {err.last_attempt.attempt_number}")
-                    else:
-                        LOGGER.error(f"{err}. Path: {self.__up_path}")
+                        err = err.last_attempt.exception()
+                    LOGGER.error(f"{err}. Path: {self.__up_path}")
+                    self.__corrupted += 1
                     if self.__is_cancelled:
                         return
                     continue

@@ -10,7 +10,7 @@ from html import escape
 from io import BytesIO
 from asyncio import sleep
 
-from bot import bot, IS_PREMIUM_USER, user_data, config_dict, DATABASE_URL, IS_PREMIUM_USER, MAX_SPLIT_SIZE, GLOBAL_EXTENSION_FILTER
+from bot import bot, IS_PREMIUM_USER, user_data, config_dict, DATABASE_URL, MAX_SPLIT_SIZE, GLOBAL_EXTENSION_FILTER
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile, deleteMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -99,7 +99,8 @@ async def get_user_settings(from_user):
     default_upload = user_dict.get(
         'default_upload', '') or config_dict['DEFAULT_UPLOAD']
     du = 'Gdrive API' if default_upload == 'gd' else 'Rclone'
-    buttons.ibutton(f"Upload using {du}",
+    dub = 'Gdrive API' if default_upload != 'gd' else 'Rclone'
+    buttons.ibutton(f"Upload using {dub}",
                     f"userset {user_id} {default_upload}")
 
     buttons.ibutton("Excluded Extensions", f"userset {user_id} ex_ex")
@@ -135,7 +136,7 @@ Gdrive Token <b>{tokenmsg}</b>
 Gdrive ID is <code>{gdrive_id}</code>
 Index Link is <code>{index}</code>
 Stop Duplicate is <b>{sd_msg}</b>
-Default Upload using <b>{du}</b>
+Default Upload is <b>{du}</b>
 Excluded Extensions is <code>{ex_ex}</code>
 YT-DLP Options is <b><code>{escape(ytopt)}</code></b>"""
 
@@ -179,7 +180,7 @@ async def add_rclone(_, message, pre_event):
         await mkdir(path)
     des_dir = ospath.join(path, f'{user_id}.conf')
     await message.download(file_name=des_dir)
-    update_user_ldata(user_id, 'rclone', f'rclone/{user_id}.conf')
+    update_user_ldata(user_id, 'rclone_config', f'rclone/{user_id}.conf')
     await deleteMessage(message)
     await update_user_settings(pre_event)
     if DATABASE_URL:
@@ -206,7 +207,10 @@ async def set_option(_, message, pre_event, option):
     handler_dict[user_id] = False
     value = message.text
     if option == 'split_size':
-        value = min(int(message.text), MAX_SPLIT_SIZE)
+        value = min(int(value), MAX_SPLIT_SIZE)
+    elif option == 'leech_dest':
+        if value.startswith('-') or value.isdigit():
+            value = int(value)
     elif option == 'excluded_extensions':
         fx = value.split()
         value = ['aria2', '!qB']
@@ -270,7 +274,7 @@ async def edit_user_settings(client, query):
     elif data[2] in ['thumb', 'rclone_config', 'token_pickle']:
         if data[2] == 'thumb':
             path = thumb_path
-        elif data[2] == 'rclone':
+        elif data[2] == 'rclone_config':
             path = rclone_conf
         else:
             path = token_pickle
@@ -413,7 +417,7 @@ Stop Duplicate is <b>{sd_msg}</b>"""
         await editMessage(message, text, buttons.build_menu(1))
     elif data[2] == 'vthumb':
         await query.answer()
-        await sendFile(message, thumb_path, from_user.mention)
+        await sendFile(message, thumb_path, name)
         await update_user_settings(query)
     elif data[2] == "sthumb":
         await query.answer()

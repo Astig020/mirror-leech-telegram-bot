@@ -60,6 +60,8 @@ class RcloneTransferHelper:
             self.extension_filter = self.__listener.user_dict['excluded_extensions']
         elif 'excluded_extensions' not in self.__listener.user_dict:
             self.extension_filter = GLOBAL_EXTENSION_FILTER
+        else:
+            self.extension_filter = ['aria2', '!qB']
 
     async def __progress(self):
         while not (self.__proc is None or self.__is_cancelled):
@@ -302,7 +304,8 @@ class RcloneTransferHelper:
         await self.__listener.onUploadComplete(link, size, files, folders, mime_type, self.name, destination, private=private)
 
     async def clone(self, config_path, src_remote, src_path, rcflags, mime_type):
-        dst_remote, dst_path = self.__listener.upDest.split(':', 1)
+        destination = self.__listener.upDest
+        dst_remote, dst_path = destination.split(':', 1)
 
         try:
             src_remote_opts, dst_remote_opt = await gather(self.__get_remote_options(config_path, src_remote),

@@ -95,18 +95,18 @@ class gdUpload(GoogleDriveHelper):
             current_file_name = ospath.join(input_directory, item)
             if ospath.isdir(current_file_name):
                 current_dir_id = self.create_directory(item, dest_id)
-                new_id = self.__upload_dir(current_file_name, current_dir_id)
+                new_id = self.__upload_dir(current_file_name, current_dir_id, extension_filter)
                 self.total_folders += 1
             elif not item.lower().endswith(tuple(extension_filter)):
                 mime_type = get_mime_type(current_file_name)
                 file_name = current_file_name.split("/")[-1]
-                # current_file_name will have the full path
                 self.__upload_file(current_file_name,
                                    file_name, mime_type, dest_id)
                 self.total_files += 1
                 new_id = dest_id
             else:
-                osremove(current_file_name)
+                if not self.listener.seed or self.listener.newDir:
+                    osremove(current_file_name)
                 new_id = 'filter'
             if self.is_cancelled:
                 break
